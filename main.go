@@ -1,62 +1,189 @@
 package main
 
-/*
-#cgo LDFLAGS: -lasound
-#include <alsa/asoundlib.h>
-#include <stdbool.h>
-extern long set_volume(int volume);
-extern long get_volume();
-extern long set_mute(bool mute);
-extern long get_mute();
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"os"
+	"strconv"
+	"volumecli/volume"
+)
 
-*/
-import "C"
-import "fmt"
+var mixer string
+var element string
 
-func SetVolume(volume int) error {
-	errCode := C.set_volume(C.int(volume))
-	if errCode < 0 {
-		return fmt.Errorf("Failed to set volume: ALSA error code %d\n", errCode)
-	}
-
-	return nil
-}
-func GetVolume() (int, error) {
-	volume := int(C.get_volume())
-	if volume < 0 {
-		return 0, fmt.Errorf("Failed to get volume: ALSA error code %d\n", volume)
-	}
-	return volume, nil
+func init() {
+	rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(downCmd)
+	rootCmd.AddCommand(setVolumeCmd)
+	rootCmd.AddCommand(muteCmd)
+	rootCmd.AddCommand(unmuteCmd)
+	rootCmd.AddCommand(toggleCmd)
 }
 
-func GetMute() (bool, error) {
-	switch res := int(C.get_mute()); {
-	case res < 0:
-		return false, nil
-	case res > 0:
-		return true, nil
-	default:
-		return false, fmt.Errorf("Failed to get mute status: ALSA error code %d\n", res)
-	}
-}
-
-func SetMute(mute bool) error {
-	errCode := C.set_mute(C.bool(mute))
-	if errCode < 0 {
-		return fmt.Errorf("Failed to set mute: ALSA error code %d\n", int(errCode))
-	}
-	return nil
+var rootCmd = &cobra.Command{
+	Use:   "volumecli",
+	Short: "A CLI for controlling your computer's volume",
 }
 
 func main() {
-	fmt.Println(GetVolume()) // Prints: 0
-	SetVolume(100)
-	fmt.Println(GetVolume()) // Prints: 0
-	muted, err := GetMute()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("muted", muted)
-	SetMute(!muted)
+	rootCmd.PersistentFlags().StringVarP(&mixer, "mixer", "m", "default", "Mixer name")
+	rootCmd.PersistentFlags().StringVarP(&element, "element", "e", "Master", "Element name")
 
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+var upCmd = &cobra.Command{
+	Use:   "up",
+	Short: "Increase volume by two percent",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		volume, err := handler.GetVolume()
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		err = handler.SetVolume(volume + 2)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("Volume increased")
+	},
+}
+var setVolumeCmd = &cobra.Command{
+	Use:   "set [volume]",
+	Short: "Set the volume to a specific value",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		wantedVolume, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Println("Error: volume must be an integer")
+			return
+		}
+
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		err = handler.SetVolume(wantedVolume)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("Volume set to", wantedVolume)
+	},
+}
+var downCmd = &cobra.Command{
+	Use:   "down",
+	Short: "Decrease volume by two percent",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		volume, err := handler.GetVolume()
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		err = handler.SetVolume(volume - 2)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("Volume decreased")
+	},
+}
+
+var muteCmd = &cobra.Command{
+	Use:   "mute",
+	Short: "Mute the volume",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		err = handler.SetMute(true)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("Volume muted")
+	},
+}
+
+var unmuteCmd = &cobra.Command{
+	Use:   "unmute",
+	Short: "Unmute the volume",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		err = handler.SetMute(false)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("Volume unmuted")
+	},
+}
+
+var toggleCmd = &cobra.Command{
+	Use:   "toggle",
+	Short: "Toggle mute/unmute",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		muted, err := handler.IsMuted()
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		err = handler.SetMute(!muted)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		if muted {
+			fmt.Println("Volume unmuted")
+		} else {
+			fmt.Println("Volume muted")
+		}
+	},
 }
