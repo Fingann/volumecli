@@ -1,5 +1,4 @@
 #include <alsa/asoundlib.h>
-#include <stdbool.h>
 
 int open_mixer(snd_mixer_t **handle, const char *card) {
     int err;
@@ -54,13 +53,8 @@ long get_mute(snd_mixer_elem_t* elem) {
     return current_mute;
 }
 
-long set_mute(snd_mixer_elem_t* elem, bool mute) {
-    int err;
-    if (mute) {
-        err = snd_mixer_selem_set_playback_switch_all(elem, 0);
-    } else {
-        err = snd_mixer_selem_set_playback_switch_all(elem, 1);
-    }
+long set_mute(snd_mixer_elem_t* elem, int mute) {
+    int err = snd_mixer_selem_set_playback_switch_all(elem, mute);
     if (err < 0) {
         return err;
     }

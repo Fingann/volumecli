@@ -18,6 +18,11 @@ func init() {
 	rootCmd.AddCommand(muteCmd)
 	rootCmd.AddCommand(unmuteCmd)
 	rootCmd.AddCommand(toggleCmd)
+	rootCmd.AddCommand(getCmd)
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "volumecli",
+		Title: "Volume Comands ",
+	})
 }
 
 var rootCmd = &cobra.Command{
@@ -35,9 +40,34 @@ func main() {
 	}
 }
 
+var getCmd = &cobra.Command{
+	Use:     "get",
+	Short:   "Get the current volume",
+	Example: "volumecli get",
+	GroupID: "volumecli",
+	Run: func(cmd *cobra.Command, args []string) {
+		handler, err := volume.NewVolumeHandler(mixer, element)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer handler.Close()
+
+		volume, err := handler.GetVolume()
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println(volume)
+	},
+}
+
 var upCmd = &cobra.Command{
-	Use:   "up",
-	Short: "Increase volume by two percent",
+	Use:     "up",
+	Short:   "Increase volume by two percent",
+	Example: "volumecli up",
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		handler, err := volume.NewVolumeHandler(mixer, element)
 		if err != nil {
@@ -62,9 +92,10 @@ var upCmd = &cobra.Command{
 	},
 }
 var setVolumeCmd = &cobra.Command{
-	Use:   "set [volume]",
-	Short: "Set the volume to a specific value",
-	Args:  cobra.ExactArgs(1),
+	Use:     "set [volume]",
+	Short:   "Set the volume to a specific value",
+	Args:    cobra.ExactArgs(1),
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		wantedVolume, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -89,8 +120,9 @@ var setVolumeCmd = &cobra.Command{
 	},
 }
 var downCmd = &cobra.Command{
-	Use:   "down",
-	Short: "Decrease volume by two percent",
+	Use:     "down",
+	Short:   "Decrease volume by two percent",
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		handler, err := volume.NewVolumeHandler(mixer, element)
 		if err != nil {
@@ -116,8 +148,9 @@ var downCmd = &cobra.Command{
 }
 
 var muteCmd = &cobra.Command{
-	Use:   "mute",
-	Short: "Mute the volume",
+	Use:     "mute",
+	Short:   "Mute the volume",
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		handler, err := volume.NewVolumeHandler(mixer, element)
 		if err != nil {
@@ -137,8 +170,9 @@ var muteCmd = &cobra.Command{
 }
 
 var unmuteCmd = &cobra.Command{
-	Use:   "unmute",
-	Short: "Unmute the volume",
+	Use:     "unmute",
+	Short:   "Unmute the volume",
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		handler, err := volume.NewVolumeHandler(mixer, element)
 		if err != nil {
@@ -158,8 +192,9 @@ var unmuteCmd = &cobra.Command{
 }
 
 var toggleCmd = &cobra.Command{
-	Use:   "toggle",
-	Short: "Toggle mute/unmute",
+	Use:     "toggle",
+	Short:   "Toggle mute/unmute",
+	GroupID: "volumecli",
 	Run: func(cmd *cobra.Command, args []string) {
 		handler, err := volume.NewVolumeHandler(mixer, element)
 		if err != nil {

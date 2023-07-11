@@ -1,13 +1,16 @@
 package volume
 
+import "C"
+
+// $$#cgo LDFLAGS: /home/user/git/volumecli/volume/libasound.a -lm
+
 /*
 #cgo LDFLAGS: -lasound
 #include <alsa/asoundlib.h>
-#include <stdbool.h>
 
 extern long set_volume(snd_mixer_elem_t *elem, int volume);
 extern long get_volume(snd_mixer_elem_t *elem);
-extern long set_mute(snd_mixer_elem_t *elem,bool mute);
+extern long set_mute(snd_mixer_elem_t *elem,int mute);
 extern long get_mute(snd_mixer_elem_t *elem);
 extern long open_mixer(snd_mixer_t **handle, char *name);
 extern long close_mixer(snd_mixer_t *handle);
@@ -74,7 +77,12 @@ func (v *Handler) GetVolume() (int, error) {
 }
 
 func (v *Handler) SetMute(mute bool) error {
-	errCode := C.set_mute(v.elem, C.bool(mute))
+	var errCode C.long
+	if mute {
+		C.set_mute(v.elem, C.int(1))
+	} else {
+		C.set_mute(v.elem, C.int(0))
+	}
 	if errCode < 0 {
 		return fmt.Errorf("Failed to set mute: ALSA error code %d\n", int(errCode))
 	}
