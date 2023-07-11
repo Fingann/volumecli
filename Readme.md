@@ -6,29 +6,21 @@ Volume CLI is an open-source command-line interface (CLI) tool for controlling y
 
 Volume CLI supports the following commands:
 
-- `vcli up` - Increase volume by two percent
-- `vcli down` - Decrease volume by two percent
-- `vcli set <volume>` - Set the volume to a specific value
-- `vcli mute` - Mute the volume
-- `vcli unmute` - Unmute the volume
-- `vcli toggle` - Toggle mute/unmute
+- `volumecli up` - Increase volume by two percent
+- `volumecli down` - Decrease volume by two percent
+- `volumecli set <volume>` - Set the volume to a specific value
+- `volumecli mute` - Mute the volume
+- `volumecli unmute` - Unmute the volume
+- `volumecli toggle` - Toggle mute/unmute
 
 It also supports optional flags for specifying the mixer and element:
 
-- `vcli -mixer "default" -element "Master" <command>`
+- `volumecli -mixer "default" -element "Master" <command>`
 
 ## Installation
 
-To install Volume CLI, you need to have Go installed on your system. You can download Go from the [official website](https://golang.org/dl/).
-
-Once you have Go installed, you can clone this repository and build the project:
-
-```bash
-git clone https://github.com/<your-username>/volumecli.git
-cd volumecli
-go build
-```
-This will create a binary named \`***vcli***\` in the current directory.
+Download the latest release from github and extract the binary to your preferred location.
+Link to latest release: https://github.com/Fingann/volumecli/releases/latest
 
 ## Usage 
 
@@ -36,25 +28,25 @@ To use Volume CLI, you can run the binary directly:
 
 ```bash
 # Increase volume by two percent
-./vcli up
+./volumecli up
 
 # Decrease volume by two percent
-./vcli down
+./volumecli down
 
 # Set volume to 50 percent
-./vcli set 50
+./volumecli set 50
 
 # Mute the volume
-./vcli mute
+./volumecli mute
 
 # Unmute the volume
-./vcli unmute
+./volumecli unmute
 
 # Toggle mute/unmute
-./vcli toggle
+./volumecli toggle
 
 # Set volume to 50 percent with specific mixer and element
-./vcli -mixer "default" -element "Master" set 50
+./volumecli -mixer "default" -element "Master" set 50
 ```
 
 # Building with Docker
