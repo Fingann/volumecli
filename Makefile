@@ -27,6 +27,6 @@ run: build
 
 clean:
 	@docker rmi -f $(IMAGE_NAME)
-	@rm -f $(LOCAL_BIN_PATH)
+	@rm -f $(BIN_DIR)/$(BINARY_NAME)
 
 all: run
